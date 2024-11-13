@@ -1,0 +1,102 @@
+import datetime
+from enum import Enum
+class Faculty:
+    def __init__(self, name, abbr, studList, studField, graduates=None):
+        self.name = name  
+        self.abbr = abbr
+        self.studList = studList if studList is not None else []
+        self.studField = studField
+        self.graduates = graduates if graduates is not None else []
+    def assgn(self,element):
+        return self.studList.append(element)
+    
+    def graduate(self,el):
+        self.graduates.append(el)
+        return self.studList.remove(el)
+    def __str__(self):
+        return ', '.join(str(s) for s in self.studList)
+class Student(Faculty):
+    def __init__(self,fname,lname,email,date,birth):
+        self.fname=fname
+        self.lname=lname
+        self.email=email
+        self.date=date
+        self.birth=birth
+    def __str__(self):
+        return self.fname
+    def belonging(self,fac):
+        return self in fac.studList
+class StudyField(Enum):
+    MechE = [ 'INGINERIE MECANICD, INDUSTRIALD HI TRANSPORTURI','FACULTATEA CONSTRUCHII, GEODEZIE HI CADASTRU']
+    SoftE = [' ENERGETICD HI INGINERIE ELECTRICD','CALCULATOARE, INFORMATICDHI MICROELECTRONICD']
+    UrbanT =['ARHITECTURD']
+    FoodT = ['TEHNOLOGIA ALIMENTELOR','HTIINHE AGRICOLE si SILVICE']
+    VetT=['MEDICINDVETERINARD']
+
+class FileManager:
+    def __init__(self, filename):
+        self.filename = filename
+    def save(self, data):#what is data? data is a dictionary
+        with open(self.filename, 'w') as f:
+            for fac in data['faculties']:#for each object in the value (a list) of the dicitonary
+                f.write(f"Faculty: {fac.name},{fac.abbr},{fac.studField.name}\n")#not the usual way you'd declare an object,what does it look like in the file?
+                for stud in fac.studList: #copying from the attribute list of Faculty into the list in the text file
+                    f.write(f"Student: {stud.fname},{stud.lname},{stud.email},{stud.date},{stud.birth}\n")#this saves "Student: some name ,some family name..." in a list,this is therefore one entry,but this list is NOT #2 list,it's still in the #1 list ,it's an attribute liste of one element form the #1 list (the faculty objects)
+                for grad in fac.graduates:#extract all attributes and write them down as a line in a list
+                    f.write(f"Graduates: {grad.fname},{grad.lname},{grad.email},{grad.date},{grad.birth}\n")
+            f.write("END FACULTIES\n")
+    
+    def load(self):
+        try:
+            data = {'faculties': []} #create an empty dictionary
+            with open(self.filename, 'r') as f:
+                lines = f.readlines()
+                current_fac = None
+                for line in lines:
+                    if line.startswith("Faculty:"):
+                        print(line.strip().split(','))
+                        fac_name, fac_abbr, fac_field = line.strip().split(',') # extract data attributes
+                        current_fac = Faculty(fac_name, fac_abbr, [], StudyField[fac_field])#also of type Faculty like the objects in the list-faculty of the dictionary ,create an object.pass [] beacuse of the number of arguments in the constructor
+                        data['faculties'].append(current_fac) #append the object in the first list of the dictionary(the key)
+                    elif line.startswith("Student:"):
+                        stud_fname, stud_lname, stud_email, stud_enroll_date, stud_birth_date = line.strip().split(',')
+                        current_stud = Student(stud_fname, stud_lname, stud_email, datetime.datetime.strptime(stud_enroll_date, '%Y-%m-%d %H:%M:%S'), datetime.datetime.strptime(stud_birth_date, '%Y-%m-%d %H:%M:%S'))
+                        current_fac.studList.append(current_stud)   #current_stud append to the stud list in current_fac
+                    elif line.startswith('Graduates:'):
+                        stud_fname, stud_lname, stud_email, stud_enroll_date, stud_birth_date = line.strip().split(',')
+                        current_grad = Student(stud_fname, stud_lname, stud_email, datetime.datetime.strptime(stud_enroll_date, '%Y-%m-%d %H:%M:%S'), datetime.datetime.strptime(stud_birth_date, '%Y-%m-%d %H:%M:%S'))
+                        current_fac.graduates.append(current_grad) 
+                    elif line.strip() == "END FACULTIES":
+                        return data
+                        
+        except FileNotFoundError:
+            print("No saved data found. Starting with an empty state.")
+            print("'faculties': [] ")
+            return {'faculties': []}
+if __name__ == "__main__":
+    
+    #f = open("myfile.txt", "w+")    
+    file_manager = FileManager('myfile.txt')
+    F1 = Faculty('fcim', 'f.c.i.m', [], StudyField.SoftE)
+    
+            # Create a student
+    P1 = Student('John', 'Miller', 'mail@example.com', datetime.datetime(2020, 5, 17), datetime.datetime(2000, 5, 17))
+    P2 = Student('Don', 'Nod', 'maill@example.com', datetime.datetime(2019, 5, 17), datetime.datetime(2000, 1, 11))
+
+    
+            # Assign the student to the faculty
+    F1.assgn(P1)
+    F1.assgn(P2)
+    F1.graduate(P1)
+            # Save the new data
+    file_manager.save({'faculties': [F1]})#what is passed in is a dictionary with the key faculties and a list as value
+    #the file_manager.save() method will iterate over the elements of the iterable structure using a for loop: "for fac in data['faculties']:", so the value associated with the key 'faculties' in the dictionary passed to file_manager.save() should be an iterable structure, such as a list, tuple, set, or any other iterable object.
+    #the iterable structure should contain only Faculty objects. If the iterable structure contains other types of objects, the method may raise an error.
+    data = file_manager.load()#now i have a ready dictionary
+    #print(data)#because data is a dictionary
+    for fac in data['faculties']:#for each object - faculty - in this list ,get
+        for stud in fac.studList:
+            print(stud)
+        for grad in fac.graduates:
+            print(grad)#grad is an object of Student class and as print is a method of this class , print(grad) will display only fname
+   
