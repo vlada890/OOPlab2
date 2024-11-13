@@ -1,0 +1,46 @@
+            
+class Person:
+    def __init__(self,fname,lname,birth):
+        self.fname=fname
+        self.lname=lname
+        self.birth=birth
+    
+    def __str__(self):
+        return self.fname
+ 
+class Student(Person):
+    def.__init__(self,fname,lname,email,date,birth,credits=None):#credits
+        Person.__init__(fname, lname, birth)
+        self.email=email
+        self.date=date
+        self.credits=credits if credits is not None else 0
+
+    def __add__(self,other):
+        try:
+            if type(other)==int:
+                self.credits+=other
+                return self.credits
+            elif isinstance(other,Student): 
+                self.credits+=other.credits
+                return self.credits
+        except TypeError:
+            return "Unsupported operand type for +"
+
+    def belonging(self,fac):
+        return self in fac.studList
+    
+class Employee:
+    def __init__(self, emp_id, salary):
+        self.emp_id = emp_id
+        self.salary = salary
+
+    def __str__(self):
+        return f"Employee ID: {self.emp_id}, Salary: {self.salary}"
+
+class StudentEmployee(Student, Employee):
+    def __init__(self, fname, lname, email, date, birth, credits=None, emp_id, salary):
+        Student.__init__(self, fname, lname, email, date, birth, credits)
+        Employee.__init__(self, emp_id, salary)
+
+    def __str__(self):
+        return f"{self.fname} {self.lname} - {self.email} - {self.emp_id} - {self.salary}"
