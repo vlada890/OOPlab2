@@ -1,0 +1,66 @@
+#include <iostream>
+#include <string>
+using namespace std;
+
+class Person{
+    protected:
+        string firstName;
+        int birthYear;
+    public:
+        Person(string fN, int bY): firstName(fN), birthYear(bY) {}
+        virtual void print(){
+            cout << "Person: " << firstName << " ,born in " << birthYear << endl;
+        }
+        virtual ~Person(){cout << "Person destructor" << endl;}
+};
+
+class Student: public Person{
+    protected:
+        string group;
+    public:
+        Student(string fN, int bY, string gr): Person(fN, bY), group(gr) {}
+        void print() override{
+            cout << "Student: " << firstName << ", born in " << birthYear << " in the group: " << group << endl;
+        }
+};
+
+class Teacher: public Person{
+    protected:
+        string subject;
+    public:
+        Teacher(string fN, int bY, string sbj): Person(fN, bY), subject(sbj) {}
+        void print() override{
+            cout << "Teacher: " << firstName << ", born in " << birthYear << ", teaches " << subject << endl;
+        }
+};
+
+class Administrator: public Person{
+    protected:
+        string job;
+    public:
+        Administrator(string fN, int bY, string jb): Person(fN, bY), job(jb) {}
+        void print() override{
+            cout << "Administrator: " << firstName << ", born in " << birthYear << " administrates " << job << endl;
+        }
+};
+
+int main(){
+    Person *a;
+    a = new Person("John", 1220);
+    a->print();
+    delete a;
+
+    a = new Student("John", 2001, "gr5");
+    a->print();
+    delete a;
+
+    a = new Teacher("John", 1220, "maths");
+    a->print();
+    delete a;
+
+    a = new Administrator("John", 1150, "things");
+    a->print();
+    delete a;
+
+    return 0;
+}
