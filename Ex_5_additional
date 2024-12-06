@@ -86,3 +86,67 @@ int main() {
 "Composition:
 If the parent object is destroyed, then the child objects also cease to exist.
 The life cycle of the child is controlled by the parent that owns it or the thing that received this role(to control) from the parent."
+#include <iostream>
+#include <vector>
+#include <string>
+
+class Book {
+private:
+    std::string title;
+    std::string author;
+
+public:
+    Book(const std::string& title, const std::string& author) : title(title), author(author) {
+        std::cout << "Book \"" << title << "\" by " << author << " created.\n";
+    }
+    ~Book() {
+        std::cout << "Book \"" << title << "\" by " << author << " destroyed.\n";
+    }
+    void display() const {
+        std::cout << "Title: " << title << ", Author: " << author << "\n";
+    }
+};
+
+class Library {
+private:
+    std::vector<Book*> books; // Vector to hold pointers to Book objects
+
+public:
+    Library() {
+        std::cout << "Library created.\n";
+    }
+
+    ~Library() {
+        std::cout << "Library destroyed. Deleting all books...\n";
+        for (Book* book : books) {
+            delete book; //delete dynamically each object 
+        }
+    }
+
+    void addBook(const std::string& title, const std::string& author) {
+        books.push_back(new Book(title, author)); // Dynamically allocate a new Book object
+    }
+
+    // Method to display all books in the library
+    void displayBooks() const {
+        std::cout << "Books in the library:\n";
+        for (const Book* book : books) {
+            book->display();
+        }
+    }
+};
+
+int main() {
+    // Create a library
+    Library myLibrary;
+
+    // Add books to the library
+    myLibrary.addBook("1984", "George Orwell");
+    myLibrary.addBook("To Kill a Mockingbird", "Harper Lee");
+
+    // Display books in the library
+    myLibrary.displayBooks();
+
+    // Library and its books will be destroyed automatically when the program exits main()
+    return 0;
+}
