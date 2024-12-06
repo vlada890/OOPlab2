@@ -1,0 +1,85 @@
+"Aggregation is a specialized form of association between two or more objects in which each object has its own life cycle but there exists an ownership as well.
+An essential property of an aggregation relationship is that the parent (i.e. the owner) can exist without the child and vice versa."
+class Faculty:
+    def __init__(self, studlist):
+        self.stud_list = studlist
+    def add_stud(self, st1):
+        self.stud_list.append(st1)
+    def __del__(self):
+        print(f"Faculty object {id(self)} destroyed.")
+class Student:
+    def __init__(self, name):
+        self.name = name
+    def __del__(self):
+        print(f"Student {self.name} object {id(self)} destroyed.")
+    
+
+# create a student and a faculty
+student1 = Student("John")
+fac1 = Faculty([])
+fac1.add_stud(student1)
+
+print(f"Student name: {student1.name}")
+del fac1
+print(f"Student still exists: {student1.name}")
+
+"
+//IN CPP ,we need to use pointers in order to pass objects as arguments. While Python doesn’t have explicit pointers, variables in Python hold references to objects, not the objects themselves.
+//This is conceptually similar to pointers, but Python handles the details behind the scenes. When you assign or pass objects to functions in Python, it’s like passing a reference, allowing the object to be modified without needing explicit pointers.
+#include <iostream>
+#include <vector>
+#include <string>
+
+using namespace std;
+
+class Student {
+public:
+    string name;
+    
+    Student(string n) : name(n) {
+        cout << "Student " << name << " created." << endl;
+    }
+
+    ~Student() {
+        cout << "Student " << name << " destroyed." << endl;
+    }
+};
+
+class Faculty {
+public:
+    vector<Student*> stud_list;  // Vector of pointers to Student objects
+
+    Faculty() {
+        cout << "Faculty object created." << endl;
+    }
+
+    // Add a Student object dynamically allocated
+    void add_stud(Student* st1) {
+        stud_list.push_back(st1);
+    }
+
+    ~Faculty() {
+        cout << "Faculty object destroyed." << endl;
+        // Manually delete the Student objects when Faculty is destroyed
+        for (auto stud : stud_list) {
+            delete stud;  // Avoid memory leak
+        }
+    }
+};
+
+int main() {
+    // Create a Student object on the heap
+    Student* student1 = new Student("John");
+
+    Faculty* fac1 = new Faculty();
+    fac1->add_stud(student1);
+    cout << "Student name: " << student1->name << endl;
+    delete fac1;
+    // After deletion, student1 still exists in the heap, but memory was cleaned up when faculty was deleted.
+    cout << "Student still exists: " << student1->name << endl;
+    // However, student1 is not deleted until you explicitly delete it.
+    delete student1;  // Clean up remaining memory
+
+    return 0;
+}
+"
