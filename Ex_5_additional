@@ -142,7 +142,7 @@ int main() {
 
     // Add books to the library
     myLibrary.addBook("1984", "George Orwell");
-    myLibrary.addBook("To Kill a Mockingbird", "Harper Lee");
+    myLibrary.addBook("Cires", "IC");
 
     // Display books in the library
     myLibrary.displayBooks();
