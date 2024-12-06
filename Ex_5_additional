@@ -6,12 +6,12 @@ class Faculty:
     def add_stud(self, st1):
         self.stud_list.append(st1)
     def __del__(self):
-        print(f"Faculty object {id(self)} destroyed.")
+        print(f"Faculty - object destroyed.")
 class Student:
     def __init__(self, name):
         self.name = name
     def __del__(self):
-        print(f"Student {self.name} object {id(self)} destroyed.")
+        print(f"Student {self.name} - object destroyed.")
     
 
 # create a student and a faculty
@@ -83,3 +83,6 @@ int main() {
     return 0;
 }
 "
+"Composition:
+If the parent object is destroyed, then the child objects also cease to exist.
+The life cycle of the child is controlled by the parent that owns it or the thing that received this role(to control) from the parent."
