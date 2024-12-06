@@ -1,0 +1,156 @@
+from abc import ABC, abstractmethod
+import random
+import math
+
+# Abstract Base Class for all ecosystem entities
+class EcosystemEntity(ABC):
+    def __init__(self, name):
+        self.name = name
+
+    @abstractmethod
+    def act(self, ecosystem):
+        pass
+
+    def __str__(self):
+        return self.name
+
+# Plant class (inherits from EcosystemEntity)
+class Plant(EcosystemEntity):
+    def __init__(self, name, growth_rate):
+        super().__init__(name)
+        self.growth_rate = growth_rate
+        self.size = 1  # Initial size of the plant
+
+    def grow(self):
+        self.size += self.growth_rate
+        print(f"{self.name} grows to size {self.size}.")
+
+    def act(self, ecosystem):
+        self.grow()
+
+# Abstract Animal class (inherits from EcosystemEntity)
+class Animal(EcosystemEntity):
+    def __init__(self, name, energy, reproduction_threshold):
+        super().__init__(name)
+        self.energy = energy
+        self.reproduction_threshold = reproduction_threshold
+
+    @abstractmethod
+    def feed(self, ecosystem):
+        pass
+
+    @abstractmethod
+    def reproduce(self, ecosystem):
+        pass
+
+    def act(self, ecosystem):
+        self.feed(ecosystem)
+        if self.energy >= self.reproduction_threshold:
+            self.reproduce(ecosystem)
+
+# Herbivore class (inherits from Animal)
+class Herbivore(Animal):
+    def __init__(self, name, energy, reproduction_threshold):
+        super().__init__(name, energy, reproduction_threshold)
+
+    def feed(self, ecosystem):
+        # Herbivores eat plants
+        plants = [entity for entity in ecosystem.entities if isinstance(entity, Plant)]
+        if plants:
+            plant = random.choice(plants)
+            self.energy += 10  # Gain energy from eating
+            plant.size -= 1  # Reduce plant size
+            print(f"{self.name} eats {plant.name} and gains energy. Energy: {self.energy}.")
+            if plant.size <= 0:
+                print(f"{plant.name} has been consumed completely!")
+                ecosystem.entities.remove(plant)
+        else:
+            print(f"{self.name} couldn't find food and loses energy.")
+            self.energy -= 5  # Lose energy if no food
+
+    def reproduce(self, ecosystem):
+        # Reproduce if energy threshold is met
+        offspring = Herbivore(f"{self.name}-offspring", energy=20, reproduction_threshold=self.reproduction_threshold)
+        ecosystem.entities.append(offspring)
+        self.energy -= 20  # Reproduction cost
+        print(f"{self.name} reproduces! New herbivore added: {offspring.name}.")
+
+# Carnivore class (inherits from Animal)
+class Carnivore(Animal):
+    def __init__(self, name, energy, reproduction_threshold):
+        super().__init__(name, energy, reproduction_threshold)
+
+    def feed(self, ecosystem):
+        # Carnivores eat herbivores
+        herbivores = [entity for entity in ecosystem.entities if isinstance(entity, Herbivore)]
+        if herbivores:
+            prey = random.choice(herbivores)
+            self.energy += 20  # Gain energy from eating
+            print(f"{self.name} eats {prey.name} and gains energy. Energy: {self.energy}.")
+            ecosystem.entities.remove(prey)  # Remove prey from ecosystem
+        else:
+            print(f"{self.name} couldn't find food and loses energy.")
+            self.energy -= 10  # Lose energy if no food
+
+    def reproduce(self, ecosystem):
+        # Reproduce if energy threshold is met
+        offspring = Carnivore(f"{self.name}-offspring", energy=30, reproduction_threshold=self.reproduction_threshold)
+        ecosystem.entities.append(offspring)
+        self.energy -= 30  # Reproduction cost
+        print(f"{self.name} reproduces! New carnivore added: {offspring.name}.")
+
+# Ecosystem class
+class Ecosystem:
+    def __init__(self):
+        self.entities = []  # All entities in the ecosystem
+        self.time = 0       # Time step for simulation
+
+    def add_entity(self, entity):
+        self.entities.append(entity)
+
+    def simulate(self, timesteps):
+        for _ in range(timesteps):
+            self.time += 1
+            print(f"\n--- Time step {self.time} ---")
+            for entity in list(self.entities):  # Use a copy of the list to avoid iteration issues
+                entity.act(self)
+            self.logistic_population_dynamics()
+
+    def logistic_population_dynamics(self):
+        # Logistic population growth simulation between rabbits (herbivores) and foxes (carnivores)
+        rabbits = sum(1 for entity in self.entities if isinstance(entity, Herbivore))
+        foxes = sum(1 for entity in self.entities if isinstance(entity, Carnivore))
+
+        # Parameters for logistic growth
+        r = 0.1  # Prey growth rate
+        K = 50   # Carrying capacity for rabbits
+        c = 0.01 # Predation rate coefficient
+
+        if rabbits > 0 and foxes > 0:
+            # Logistic equation for rabbits
+            delta_rabbits = r * rabbits * (1 - rabbits / K) - c * rabbits * foxes
+            # Logistic equation for foxes (simplified: foxes depend on rabbit population)
+            delta_foxes = c * rabbits * foxes * 0.1 - 0.05 * foxes
+
+            # Update populations
+            rabbits = max(0, rabbits + math.ceil(delta_rabbits))
+            foxes = max(0, foxes + math.ceil(delta_foxes))
+
+            print(f"Logistic dynamics: Rabbits={rabbits}, Foxes={foxes}.")
+
+# Example usage
+if __name__ == "__main__":
+    ecosystem = Ecosystem()
+
+    # Add initial plants, herbivores, and carnivores
+    for i in range(10):
+        ecosystem.add_entity(Plant(f"Plant-{i}", growth_rate=1))
+
+    for i in range(5):
+        ecosystem.add_entity(Herbivore(f"Rabbit-{i}", energy=20, reproduction_threshold=50))
+
+    for i in range(2):
+        ecosystem.add_entity(Carnivore(f"Fox-{i}", energy=40, reproduction_threshold=100))
+
+    # Simulate the ecosystem for 20 timesteps
+    ecosystem.simulate(timesteps=20)
