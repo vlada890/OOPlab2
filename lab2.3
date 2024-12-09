@@ -1,0 +1,213 @@
+import datetime
+from enum import Enum
+import string
+class Faculty:
+    def __init__(self, name, abbr, studList, studField):
+        self.name = name
+        self.abbr = abbr
+        self.studList = studList  
+        self.sField = studField  
+        self.graduates = []  
+
+    def assgn(self, student):
+        self.studList.append(student)
+        return self.studList
+
+    def graduate(self, student):
+        if student in self.studList:
+            self.graduates.append(student)
+            self.studList.remove(student)
+        else:
+            print(f"{student} is not enrolled in this faculty.")
+
+    def display_students(self):
+        return [str(student) for student in self.studList]
+
+    def display_graduates(self):
+        return [str(student) for student in self.graduates]
+
+    def __str__(self):
+        return f"Faculty: {self.name}, Abbreviation: {self.abbr}, Field: {self.sField.name}"
+
+class Student:
+    def __init__(self, fname, lname, email, enroll_date, birth_date):
+        self.fname = fname
+        self.lname = lname
+        self.email = email
+        self.enroll_date = enroll_date
+        self.birth_date = birth_date
+
+    def __str__(self):
+        return f"{self.fname} {self.lname} ({self.email})"
+
+    def belonging(self):
+        a=self.email.split('.')[2]
+        a=a.split('@')[0]
+        return f'this student belongs to {a}'
+
+class StudyField(Enum):
+    MechE = ['INGINERIE MECANICĂ, INDUSTRIALĂ ȘI TRANSPORTURI', 'FACULTATEA CONSTRUCȚII, GEODEZIE ȘI CADASTRU']
+    SoftE = ['ENERGETICĂ ȘI INGINERIE ELECTRICĂ', 'CALCULATOARE, INFORMATICĂ ȘI MICROELECTRONICĂ']
+    UrbanT = ['ARHITECTURĂ']
+    FoodT = ['TEHNOLOGIA ALIMENTELOR', 'ȘTIINȚE AGRICOLE ȘI SILVICE']
+    VetT = ['MEDICINĂ VETERINARĂ']
+
+class University:
+    def __init__(self):
+        self.faculties = []  
+
+    def create_faculty(self, name, abbr, study_field):
+        new_faculty = Faculty(name, abbr, [], study_field)
+        self.faculties.append(new_faculty)
+        return new_faculty
+
+    def display_all_faculties(self):
+        return [str(faculty) for faculty in self.faculties]
+
+    def display_faculties_by_field(self, field):
+        lista=[]
+        for faculty in self.faculties:
+            if faculty.sField == field:
+                lista.append(str(faculty))
+        return lista
+        
+class FileManager:
+    def __init__(self, filename):
+        self.filename = filename
+    def save(self, data):#what is data? data is a dictionary
+        with open(self.filename, 'w') as f:
+            for fac in data['faculties']:#for each object in the value (a list) of the dicitonary
+                f.write(f"Faculty: {fac.name},{fac.abbr},{fac.sField}\n")#not the usual way you'd declare an object,what does it look like in the file?
+                for stud in fac.studList: #copying from the attribute list of Faculty into the list in the text file
+                    f.write(f"Student: {stud.fname},{stud.lname},{stud.email},{stud.enroll_date},{stud.birth_date}\n")#this saves "Student: some name ,some family name..." in a list,this is therefore one entry,but this list is NOT #2 list,it's still in the #1 list ,it's an attribute liste of one element form the #1 list (the faculty objects)
+                for grad in fac.graduates:#extract all attributes and write them down as a line in a list
+                    f.write(f"Graduates: {grad.fname},{grad.lname},{grad.email},{grad.enroll_date},{grad.birth_date}\n")
+            f.write("END FACULTIES\n")
+    
+    def load(self):
+        try:
+            data = {'faculties': []} #create an empty dictionary
+            with open(self.filename, 'r') as f:
+                lines = f.readlines()
+                current_fac = None
+                for line in lines:
+                    if line.startswith("Faculty:"):
+                        print(line.strip().split(','))
+                        fac_name, fac_abbr, fac_field = line.strip().split(',') # extract data attributes
+                        current_fac = Faculty(fac_name, fac_abbr, [], StudyField[ fac_field.split('.')[-1]])#also of type Faculty like the objects in the list-faculty of the dictionary ,create an object.pass [] beacuse of the number of arguments in the constructor
+                        #careful how to use enum's studyfield :StudyField[fac_field] ->'StudyField.SoftE' which is not the right format for an argument to initialize the obj faculty.
+                        data['faculties'].append(current_fac) #append the object in the first list of the dictionary(the key)
+                    elif line.startswith("Student:"):
+                        stud_fname, stud_lname, stud_email, stud_enroll_date, stud_birth_date = line.strip().split(',')
+                        current_stud = Student(stud_fname, stud_lname, stud_email, datetime.datetime.strptime(stud_enroll_date, '%Y-%m-%d %H:%M:%S'), datetime.datetime.strptime(stud_birth_date, '%Y-%m-%d %H:%M:%S'))
+                        current_fac.studList.append(current_stud)   #current_stud append to the stud list in current_fac
+                    elif line.startswith('Graduates:'):
+                        stud_fname, stud_lname, stud_email, stud_enroll_date, stud_birth_date = line.strip().split(',')
+                        current_grad = Student(stud_fname, stud_lname, stud_email, datetime.datetime.strptime(stud_enroll_date, '%Y-%m-%d %H:%M:%S'), datetime.datetime.strptime(stud_birth_date, '%Y-%m-%d %H:%M:%S'))
+                        current_fac.graduates.append(current_grad) 
+                    elif line.strip() == "END FACULTIES":
+                        return data
+                        
+        except FileNotFoundError:
+            print("No saved data found. Starting with an empty state.")
+            print("'faculties': [] ")
+            return {'faculties': []}
+            
+
+class Logger:
+    def __init__(self, logfile):
+        self.logfile = logfile
+
+    def log(self, message):
+        with open(self.logfile, 'a') as f:
+            timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            f.write(f"[{timestamp}] {message}\n")
+
+
+def batch_enroll(filename, faculty, logger=None):
+    try:
+        with open(filename, 'r') as f:
+            for line in f.readlines():
+                fname, lname, email, enroll_date, birth_date = line.strip().split(',')
+                student = Student(fname, lname, email,
+                                  datetime.datetime.strptime(enroll_date, '%Y-%m-%d'),
+                                  datetime.datetime.strptime(birth_date, '%Y-%m-%d'))
+                faculty.assgn(student, logger)
+    except FileNotFoundError:
+        print(f"File {filename} not found.")
+        if logger:
+            logger.log(f"Batch enrollment failed: file {filename} not found.")
+
+
+def batch_graduate(filename, faculty, logger=None):
+    try:
+        with open(filename, 'r') as f:
+            for line in f.readlines():
+                fname, lname, email, enroll_date, birth_date = line.strip().split(',')
+                student = Student(fname, lname, email,
+                                  datetime.datetime.strptime(enroll_date, '%Y-%m-%d'),
+                                  datetime.datetime.strptime(birth_date, '%Y-%m-%d'))
+                try:
+                    faculty.graduate(student, logger)
+                except ValueError as e:
+                    print(e)
+    except FileNotFoundError:
+        print(f"File {filename} not found.")
+        if logger:
+            logger.log(f"Batch graduation failed: file {filename} not found.")
+
+
+logger = Logger('operations.log')
+university = University()
+fcim = university.create_faculty('fcim', 'f.c.i.m', StudyField.SoftE)
+food_tech = university.create_faculty('Food Technology', 'F.T.', StudyField.FoodT)
+
+student1 = Student('John', 'Miller', 'john.miller.fcim@mail.com', datetime.datetime(2020, 5, 17), datetime.datetime(2000, 5, 17))
+student2 = Student('Jane', 'Doe', 'jane.doe.foodt@mail.com', datetime.datetime(2021, 9, 1), datetime.datetime(2001, 7, 22))
+fcim.assgn(student1)
+food_tech.assgn(student2)
+
+fcim.graduate(student1)
+print("Currently Enrolled Students in FCIM:", fcim.display_students())
+print("Graduates from FCIM:", fcim.display_graduates())
+print(f"To which faculty does {student1} belong to ? -> {student1.belonging()}")
+print(f"To which faculty does {student2} belong to ? -> {student2.belonging()}")
+print("All Faculties:", university.display_all_faculties())
+print("Faculties in Food Technology:", university.display_faculties_by_field(StudyField.FoodT))
+
+file_manager = FileManager('myfile.txt')
+file_manager.save({'faculties': [fcim,food_tech]})
+logger.log("Data saved to file.")
+batch_enroll('enroll_students.txt', fcim, logger)
+batch_graduate('graduate_students.txt', fcim, logger)
+#grad is an object of Student class and as print is a method of this class , print(grad) will display only fname
+
+transp=university.create_faculty('Transport','T',StudyField.UrbanT)
+
+student3 = Student('Alice', 'Smith', 'alice.smith.transp@mail.com', datetime.datetime(2022, 2, 15),
+                   datetime.datetime(2002, 3, 10))
+transp.assgn(student3)
+
+# Load saved data
+saved_data = file_manager.load()
+
+# Compare saved data with current state
+saved_faculties = {fac.name: fac for fac in saved_data['faculties']}
+current_faculties = {fac.name: fac for fac in university.faculties}
+
+print("\n--- Differences in Faculties ---")
+for fac_name, fac in current_faculties.items():
+    if fac_name not in saved_faculties:
+        print(f"New Faculty Added: {fac}")
+    else:
+        saved_fac = saved_faculties[fac_name]
+        if len(fac.studList) != len(saved_fac.studList):
+            print(f"Faculty {fac_name}: New students added or removed.")
+        if len(fac.graduates) != len(saved_fac.graduates):
+            print(f"Faculty {fac_name}: New graduates added or removed.")
+    #what is passed in is a dictionary with the key faculties and a list as value
+    #the file_manager.save() method will iterate over the elements of the iterable structure using a for loop: "for fac in data['faculties']:", so the value associated with the key 'faculties' in the dictionary passed to file_manager.save() should be an iterable structure, such as a list, tuple, set, or any other iterable object.
+    #the iterable structure should contain only Faculty objects. If the iterable structure contains other types of objects, the method may raise an error.
+   #now i have a ready dictionary
+    #print(data)#because data is a dictionary
+    
