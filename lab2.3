@@ -205,9 +205,5 @@ for fac_name, fac in current_faculties.items():
             print(f"Faculty {fac_name}: New students added or removed.")
         if len(fac.graduates) != len(saved_fac.graduates):
             print(f"Faculty {fac_name}: New graduates added or removed.")
-    #what is passed in is a dictionary with the key faculties and a list as value
-    #the file_manager.save() method will iterate over the elements of the iterable structure using a for loop: "for fac in data['faculties']:", so the value associated with the key 'faculties' in the dictionary passed to file_manager.save() should be an iterable structure, such as a list, tuple, set, or any other iterable object.
-    #the iterable structure should contain only Faculty objects. If the iterable structure contains other types of objects, the method may raise an error.
-   #now i have a ready dictionary
-    #print(data)#because data is a dictionary
+
     
