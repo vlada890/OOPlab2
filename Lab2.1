@@ -1,0 +1,90 @@
+import datetime
+from enum import Enum
+import string
+class Faculty:
+    def __init__(self, name, abbr, studList, studField):
+        self.name = name
+        self.abbr = abbr
+        self.studList = studList  
+        self.sField = studField  
+        self.graduates = []  
+
+    def assgn(self, student):
+        self.studList.append(student)
+        return self.studList
+
+    def graduate(self, student):
+        if student in self.studList:
+            self.graduates.append(student)
+            self.studList.remove(student)
+        else:
+            print(f"{student} is not enrolled in this faculty.")
+
+    def display_students(self):
+        return [str(student) for student in self.studList]
+
+    def display_graduates(self):
+        return [str(student) for student in self.graduates]
+
+    def __str__(self):
+        return f"Faculty: {self.name}, Abbreviation: {self.abbr}, Field: {self.sField.name}"
+
+class Student:
+    def __init__(self, fname, lname, email, enroll_date, birth_date):
+        self.fname = fname
+        self.lname = lname
+        self.email = email
+        self.enroll_date = enroll_date
+        self.birth_date = birth_date
+
+    def __str__(self):
+        return f"{self.fname} {self.lname} ({self.email})"
+
+    def belonging(self):
+        a=self.email.split('.')[2]
+        a=a.split('@')[0]
+        return f'this student belongs to {a}'
+
+class StudyField(Enum):
+    MechE = ['INGINERIE MECANICĂ, INDUSTRIALĂ ȘI TRANSPORTURI', 'FACULTATEA CONSTRUCȚII, GEODEZIE ȘI CADASTRU']
+    SoftE = ['ENERGETICĂ ȘI INGINERIE ELECTRICĂ', 'CALCULATOARE, INFORMATICĂ ȘI MICROELECTRONICĂ']
+    UrbanT = ['ARHITECTURĂ']
+    FoodT = ['TEHNOLOGIA ALIMENTELOR', 'ȘTIINȚE AGRICOLE ȘI SILVICE']
+    VetT = ['MEDICINĂ VETERINARĂ']
+
+class University:
+    def __init__(self):
+        self.faculties = []  
+
+    def create_faculty(self, name, abbr, study_field):
+        new_faculty = Faculty(name, abbr, [], study_field)
+        self.faculties.append(new_faculty)
+        return new_faculty
+
+    def display_all_faculties(self):
+        return [str(faculty) for faculty in self.faculties]
+
+    def display_faculties_by_field(self, field):
+        lista=[]
+        for faculty in self.faculties:
+            if faculty.sField == field:
+                lista.append(str(faculty))
+        return lista
+        
+
+university = University()
+fcim = university.create_faculty('fcim', 'f.c.i.m', StudyField.SoftE)
+food_tech = university.create_faculty('Food Technology', 'F.T.', StudyField.FoodT)
+
+student1 = Student('John', 'Miller', 'john.miller.fcim@mail.com', datetime.datetime(2020, 5, 17), datetime.datetime(2000, 5, 17))
+student2 = Student('Jane', 'Doe', 'jane.doe.foodt@mail.com', datetime.datetime(2021, 9, 1), datetime.datetime(2001, 7, 22))
+fcim.assgn(student1)
+food_tech.assgn(student2)
+fcim.graduate(student1)
+print("Currently Enrolled Students in FCIM:", fcim.display_students())
+print("Graduates from FCIM:", fcim.display_graduates())
+print(f"To which faculty does {student1} belong to ? -> {student1.belonging()}")
+print(f"To which faculty does {student2} belong to ? -> {student2.belonging()}")
+
+print("All Faculties:", university.display_all_faculties())
+print("Faculties in Food Technology:", university.display_faculties_by_field(StudyField.FoodT))
